@@ -17,10 +17,16 @@ A local-first Android second-brain prototype based on [Daedalus Echo](https://gi
 
 ## Build and tests
 
-GitHub Actions workflow: [Android validation](.github/workflows/android.yml). It fetches and checks out a **pinned** upstream source revision, applies independently maintained local changes, then runs unit tests and builds a debug APK. A successful workflow publishes an APK as an Actions artifact for a limited retention period.
+GitHub Actions workflow: [Android validation](.github/workflows/android.yml). See [the actual workflow runs](https://github.com/EnigmaThe1/Obsidian-Echo/actions/workflows/android.yml), [the latest reported status](ci-status/latest.json), and [the device-testing checklist](docs/TESTING.md). It fetches and checks out a **pinned** upstream source revision, applies independently maintained local changes, then runs unit tests and builds a debug APK. A successful workflow publishes an APK as an Actions artifact for a limited retention period.
 
 No secrets, personal recordings, or password databases are committed to this public repository. Read [SECURITY.md](SECURITY.md) before installing or testing the APK.
 
 ## Attribution
 
 Copyright 2026 DaedalusApps. Original project distributed under the MIT License. See [UPSTREAM_LICENSE](UPSTREAM_LICENSE) for the original licence. Obsidian Echo changes are independently maintained.
+
+## Experimental APK
+
+Only after the workflow completes successfully, open its GitHub Actions run and download the `obsidian-echo-experimental-apk` artifact ZIP. Verify its `SHA256SUMS.txt` file before installing the APK. This is **not** an audited production password manager, and it has no credential-vault access yet.
+
+The test build uses a separate package ID, `com.daedalusapps.echo.obsidian`, to avoid overwriting your installed Daedalus Echo. Its models may need separate downloads because of Android's app sandbox. CI does not test phone-specific model acceleration or folder picker behavior.
