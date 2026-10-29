@@ -137,16 +137,15 @@ class ObsidianImporter(private val context: Context) {
     }
 
     companion object {
-        /** Reviewable exclusion policy; unrelated ordinary notes are allowed. */
         /** Obsidian opt-out frontmatter: explicit note privacy is respected. */
         internal fun shouldSkipContent(text: String): Boolean {
-            val front = text.removePrefix("\\uFEFF")
-            if (!front.startsWith("---\\n") && !front.startsWith("---\\r\\n")) return false
+            val front = text.removePrefix("\uFEFF")
+            if (!front.startsWith("---\n") && !front.startsWith("---\r\n")) return false
             val lines = front.lineSequence().drop(1).take(100).takeWhile { it.trim() != "---" }.toList()
-            val yaml = lines.joinToString("\\n")
-            return Regex("""(?im)^\\s*(?:ai[-_]index)\\s*:\\s*(?:false|no|off|0)\\s*$""")
+            val yaml = lines.joinToString("\n")
+            return Regex("""(?im)^\s*(?:ai[-_]index)\s*:\s*(?:false|no|off|0)\s*$""")
                 .containsMatchIn(yaml) ||
-                Regex("""(?im)^\\s*(?:private|sensitive|confidential)\\s*:\\s*(?:true|yes|on|1)\\s*$""")
+                Regex("""(?im)^\s*(?:private|sensitive|confidential)\s*:\s*(?:true|yes|on|1)\s*$""")
                     .containsMatchIn(yaml)
         }
 
