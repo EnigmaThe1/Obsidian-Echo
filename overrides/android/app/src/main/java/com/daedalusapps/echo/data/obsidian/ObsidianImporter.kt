@@ -136,6 +136,13 @@ class ObsidianImporter(private val context: Context) {
         }
     }
 
+    /** Remove only the locally cached Obsidian index. Does not touch Markdown vault files. */
+    suspend fun clearIndexed(): Int = withContext(Dispatchers.IO) {
+        val indexed = repo.allRecordings.first().filter { it.filename.startsWith("obsidian_") }
+        for (note in indexed) repo.delete(note)
+        indexed.size
+    }
+
     companion object {
         /** Obsidian opt-out frontmatter: explicit note privacy is respected. */
         internal fun shouldSkipContent(text: String): Boolean {
