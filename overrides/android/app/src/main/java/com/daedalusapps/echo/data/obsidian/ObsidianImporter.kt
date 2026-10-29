@@ -69,7 +69,7 @@ class ObsidianImporter(private val context: Context) {
                 }
                 val bytes = context.contentResolver.openInputStream(node.uri)?.use {
                     // Limit allocation even if a provider reports an incorrect file size.
-                    it.readBytes(maxFileBytes + 1)
+                    it.readAtMost(maxFileBytes + 1)
                 } ?: run {
                     skipped++
                     return
@@ -132,7 +132,7 @@ class ObsidianImporter(private val context: Context) {
 }
 
 /** Bounded input reader; never trusts the metadata size returned by content providers. */
-private fun java.io.InputStream.readBytes(limit: Int): ByteArray {
+private fun java.io.InputStream.readAtMost(limit: Int): ByteArray {
     val out = java.io.ByteArrayOutputStream()
     val buf = ByteArray(8192)
     while (out.size() < limit) {
