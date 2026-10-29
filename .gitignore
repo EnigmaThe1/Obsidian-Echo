@@ -1,0 +1,32 @@
+# Never commit sensitive personal data to this public repository.
+daedalus_backup*.json
+*.kdbx
+*.key
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.db
+*.sqlite
+*.sqlite3
+*.m4a
+*.mp3
+*.wav
+*.apk
+*.aab
+.env
+.env.*
+!*.example
+local.properties
+keystore.properties
+*.pem
+*.asc
+
+# Build artifacts
+.gradle/
+build/
+app/build/
+upstream-echo/
+dist/
+__pycache__/
+*.pyc
