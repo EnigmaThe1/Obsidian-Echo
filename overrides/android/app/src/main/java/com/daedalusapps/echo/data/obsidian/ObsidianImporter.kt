@@ -120,11 +120,15 @@ class ObsidianImporter(private val context: Context) {
     companion object {
         /** Reviewable exclusion policy; unrelated ordinary notes are allowed. */
         internal fun shouldSkipName(name: String): Boolean {
-            val n = name.lowercase()
-            return n.startsWith(".") || n in setOf(
+            val n = name.trim().lowercase()
+            val stem = n.removeSuffix(".md").removeSuffix(".markdown")
+            val secretBasenames = setOf(
                 "credentials", "credential", "passwords", "password", "secrets",
-                "secret", "private-keys", "private_keys", "tokens", "token"
+                "secret", "private-keys", "private_keys", "tokens", "token",
+                "api-keys", "api_keys", "api keys", "recovery-codes", "recovery_codes",
+                "backup-codes", "backup_codes", "ssh-keys", "ssh_keys"
             )
+            return n.startsWith(".") || stem in secretBasenames
         }
     }
 
