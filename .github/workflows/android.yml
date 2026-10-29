@@ -3,6 +3,10 @@ name: Android Obsidian Echo - Build and Tests
 on:
   push:
     branches: [main]
+    paths:
+      - '.github/workflows/android.yml'
+      - 'scripts/**'
+      - 'overrides/**'
   workflow_dispatch:
 
 permissions:
@@ -94,3 +98,46 @@ jobs:
           path: dist/
           retention-days: 14
           if-no-files-found: error
+
+  publish-ci-result:
+    needs: build-and-test
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository for CI status reporting
+        uses: actions/checkout@v4
+      - name: Publish machine-readable status to the repository
+        env:
+          BUILD_RESULT: ${{ needs.build-and-test.result }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout -B main origin/main
+          mkdir -p ci-status
+          python3 - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          data = {
+              "result": os.environ["BUILD_RESULT"],
+              "source_commit": os.environ["SOURCE_SHA"],
+              "run_id": os.environ["RUN_ID"],
+              "workflow_url": "https://github.com/" + os.environ["REPOSITORY"] + "/actions/runs/" + os.environ["RUN_ID"],
+              "reported_at": datetime.now(timezone.utc).isoformat(),
+              "note": "Result from hosted unit-tests plus Android debug APK build; not a phone/device test."
+          }
+          with open("ci-status/latest.json", "w", encoding="utf-8") as file:
+              json.dump(data, file, indent=2)
+              file.write("\n")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ci-status/latest.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "ci: record Android validation result [skip ci]"
+          git push origin main
