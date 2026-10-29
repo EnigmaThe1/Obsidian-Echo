@@ -1,8 +1,8 @@
 {
-  "result": "cancelled",
-  "source_commit": "9fbc06eea4bfe174db5949f9c6b32701203831c9",
-  "run_id": "40858487514",
-  "workflow_url": "https://github.com/EnigmaThe1/Obsidian-Echo/actions/runs/40858487514",
-  "reported_at": "2026-10-29T10:35:05.038006+00:00",
+  "result": "success",
+  "source_commit": "0547cf486f28b58633fa9cfa8dab7af61b6974ec",
+  "run_id": "40858507985",
+  "workflow_url": "https://github.com/EnigmaThe1/Obsidian-Echo/actions/runs/40858507985",
+  "reported_at": "2026-10-29T10:38:59.031394+00:00",
   "note": "Result from hosted unit-tests plus Android debug APK build; not a phone/device test."
 }
