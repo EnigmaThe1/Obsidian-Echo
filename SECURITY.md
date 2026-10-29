@@ -6,7 +6,9 @@ This public repository must never contain passwords, transcripts, recording audi
 - GitHub-hosted builds never receive your notes, recordings, credentials, or private keys.
 - The isolated debug app uses a distinct Android application ID. Do not uninstall your existing Echo build.
 - **Do not put passwords in ordinary Obsidian notes.** Password retrieval is planned using a separate encrypted credential vault and user authentication. Raw secrets must not go to language-model prompts, embeddings, logs, or backups.
-- The initial Obsidian index uses Android's folder picker and read-only access. It excludes hidden directories and obvious credential-related filenames, but those names are not a complete confidentiality boundary. Select a vault with ordinary notes only.
+- The Obsidian index uses Android's folder picker and read-only access. It excludes hidden directories and obvious credential-related filenames; notes may also opt out with YAML frontmatter `ai-index: false` or `private: true`. These checks are NOT a comprehensive confidentiality boundary. Select a vault with ordinary notes only.
+- A completed re-index removes stale imported copies from the local Echo database. A failed or truncated scan deliberately does not remove them. Use **Clear Obsidian index** in Settings to remove all local imported copies without touching the Obsidian files.
+- The existing debug APK is signed with a runner-generated key that can differ across builds. A future debug update may require uninstalling the previous experimental application, losing only its test-app state. Do not use it for production secrets.
 - Echo's existing JSON export remains readable plaintext for its existing recordings. Treat those backups as confidential. The development build excludes Obsidian-imported notes from JSON backup.
 - This prototype changes Android system backup eligibility to disabled; this does not encrypt user-initiated exports.
 - A successful CI job proves build/test execution on a hosted runner, not end-to-end AI behavior on a physical phone.
