@@ -9,6 +9,7 @@ import com.daedalusapps.echo.data.db.AppDatabase
 import com.daedalusapps.echo.data.model.Recording
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.first
 import java.security.MessageDigest
 
 /**
@@ -19,7 +20,7 @@ import java.security.MessageDigest
  * a cryptographic boundary or a replacement for an encrypted credential vault.
  */
 class ObsidianImporter(private val context: Context) {
-    data class Result(val indexed: Int, val unchanged: Int, val skipped: Int)
+    data class Result(val indexed: Int, val unchanged: Int, val skipped: Int, val removed: Int)
 
     private val repo = RecordingRepository(AppDatabase.getInstance(context).recordingDao())
     private val maxFileBytes = 256 * 1024
@@ -42,10 +43,13 @@ class ObsidianImporter(private val context: Context) {
         var unchanged = 0
         var skipped = 0
         var visitedFiles = 0
+        var completeScan = true
+        val seenIds = mutableSetOf<String>()
 
         try {
             suspend fun visit(node: DocumentFile, relative: String, depth: Int) {
                 if (depth > maxDepth || visitedFiles >= maxFiles) {
+                    completeScan = false
                     skipped++
                     return
                 }
@@ -71,6 +75,7 @@ class ObsidianImporter(private val context: Context) {
                     // Limit allocation even if a provider reports an incorrect file size.
                     it.readAtMost(maxFileBytes + 1)
                 } ?: run {
+                    completeScan = false
                     skipped++
                     return
                 }
@@ -79,11 +84,12 @@ class ObsidianImporter(private val context: Context) {
                     return
                 }
                 val text = bytes.toString(Charsets.UTF_8).trim()
-                if (text.isEmpty()) {
+                if (text.isEmpty() || shouldSkipContent(text)) {
                     skipped++
                     return
                 }
                 val id = "obsidian_" + sha256(treeUri.toString() + "/" + currentPath).take(32) + ".md"
+                seenIds.add(id)
                 val existing = repo.get(id)
                 if (existing?.transcript == text) {
                     unchanged++
@@ -111,7 +117,20 @@ class ObsidianImporter(private val context: Context) {
 
             // The root is the chosen vault, not a subfolder whose name should be filtered.
             for (child in root.listFiles()) visit(child, "", 0)
-            Result(indexed, unchanged, skipped)
+            // Never prune on a truncated scan: otherwise inaccessible or unvisited
+            // documents would silently disappear from the searchable local index.
+            var removed = 0
+            if (completeScan) {
+                val stale = repo.allRecordings.first().filter {
+                    shouldPruneImport(it.filename, seenIds, completeScan)
+                }
+                for (old in stale) {
+                    // This only deletes our cached database row, never the Obsidian file.
+                    repo.delete(old)
+                    removed++
+                }
+            }
+            Result(indexed, unchanged, skipped, removed)
         } finally {
             embedder.close()
         }
@@ -119,6 +138,23 @@ class ObsidianImporter(private val context: Context) {
 
     companion object {
         /** Reviewable exclusion policy; unrelated ordinary notes are allowed. */
+        /** Obsidian opt-out frontmatter: explicit note privacy is respected. */
+        internal fun shouldSkipContent(text: String): Boolean {
+            val front = text.removePrefix("\\uFEFF")
+            if (!front.startsWith("---\\n") && !front.startsWith("---\\r\\n")) return false
+            val lines = front.lineSequence().drop(1).take(100).takeWhile { it.trim() != "---" }.toList()
+            val yaml = lines.joinToString("\\n")
+            return Regex("""(?im)^\\s*(?:ai[-_]index)\\s*:\\s*(?:false|no|off|0)\\s*$""")
+                .containsMatchIn(yaml) ||
+                Regex("""(?im)^\\s*(?:private|sensitive|confidential)\\s*:\\s*(?:true|yes|on|1)\\s*$""")
+                    .containsMatchIn(yaml)
+        }
+
+        /** True only when the whole selected vault was scanned successfully. */
+        internal fun shouldPruneImport(id: String, seen: Set<String>, scanComplete: Boolean): Boolean {
+            return scanComplete && id.startsWith("obsidian_") && id !in seen
+        }
+
         internal fun shouldSkipName(name: String): Boolean {
             val n = name.trim().lowercase()
             val stem = n.removeSuffix(".md").removeSuffix(".markdown")
@@ -126,7 +162,8 @@ class ObsidianImporter(private val context: Context) {
                 "credentials", "credential", "passwords", "password", "secrets",
                 "secret", "private-keys", "private_keys", "tokens", "token",
                 "api-keys", "api_keys", "api keys", "recovery-codes", "recovery_codes",
-                "backup-codes", "backup_codes", "ssh-keys", "ssh_keys"
+                "backup-codes", "backup_codes", "ssh-keys", "ssh_keys",
+                "private", "confidential", "password-manager", "password_manager"
             )
             return n.startsWith(".") || stem in secretBasenames
         }
