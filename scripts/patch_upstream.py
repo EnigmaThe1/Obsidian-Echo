@@ -95,7 +95,8 @@ ui = '''                // Obsidian notes: no directory writes, no background cr
                                     }
                                     snackbar.showSnackbar(
                                         "Obsidian: ${result.indexed} indexed, " +
-                                            "${result.unchanged} unchanged, ${result.skipped} skipped"
+                                            "${result.unchanged} unchanged, ${result.skipped} skipped, " +
+                                            "${result.removed} stale removed"
                                     )
                                 } catch (e: Exception) {
                                     snackbar.showSnackbar("Index failed: ${e.message}")
@@ -106,6 +107,28 @@ ui = '''                // Obsidian notes: no directory writes, no background cr
                         }
                     }
                 ) { Text(if (isIndexingObsidian) "Indexing..." else "Index Obsidian notes") }
+
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isIndexingObsidian,
+                    onClick = {
+                        isIndexingObsidian = true
+                        scope.launch {
+                            try {
+                                val removed = withContext(Dispatchers.IO) {
+                                    ObsidianImporter(context).clearIndexed()
+                                }
+                                snackbar.showSnackbar(
+                                    "Cleared ${removed} cached Obsidian notes. Original vault unchanged."
+                                )
+                            } catch (e: Exception) {
+                                snackbar.showSnackbar("Clear failed: ${e.message}")
+                            } finally {
+                                isIndexingObsidian = false
+                            }
+                        }
+                    }
+                ) { Text("Clear Obsidian index (vault stays untouched)") }
 
 '''
 patch(settings, anchor, ui + anchor)
