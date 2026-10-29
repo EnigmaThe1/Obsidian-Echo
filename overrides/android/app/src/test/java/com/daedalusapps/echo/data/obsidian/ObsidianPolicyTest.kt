@@ -11,7 +11,7 @@ class ObsidianPolicyTest {
     }
 
     @Test fun obviousCredentialCollectionsAreExcluded() {
-        for (name in listOf("Passwords", "credentials", "Secrets", "private-keys", "TOKENS")) {
+        for (name in listOf("Passwords", "credentials", "Secrets", "private-keys", "TOKENS", "Passwords.md", "Credentials.MD", "API-KEYS.md", "recovery-codes.md", "ssh_keys.md")) {
             assertTrue(name, ObsidianImporter.shouldSkipName(name))
         }
     }
