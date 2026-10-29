@@ -51,7 +51,7 @@ class ObsidianImporter(private val context: Context) {
                 }
                 val name = node.name ?: return
                 val currentPath = if (relative.isEmpty()) name else "$relative/$name"
-                if (isExcluded(name)) {
+                if (shouldSkipName(name)) {
                     skipped++
                     return
                 }
@@ -117,12 +117,15 @@ class ObsidianImporter(private val context: Context) {
         }
     }
 
-    private fun isExcluded(name: String): Boolean {
-        val n = name.lowercase()
-        return n.startsWith(".") || n in setOf(
-            "credentials", "credential", "passwords", "password", "secrets",
-            "secret", "private-keys", "private_keys", "tokens", "token"
-        )
+    companion object {
+        /** Reviewable exclusion policy; unrelated ordinary notes are allowed. */
+        internal fun shouldSkipName(name: String): Boolean {
+            val n = name.lowercase()
+            return n.startsWith(".") || n in setOf(
+                "credentials", "credential", "passwords", "password", "secrets",
+                "secret", "private-keys", "private_keys", "tokens", "token"
+            )
+        }
     }
 
     private fun sha256(input: String): String = MessageDigest
