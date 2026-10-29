@@ -25,6 +25,10 @@ No secrets, personal recordings, or password databases are committed to this pub
 
 Copyright 2026 DaedalusApps. Original project distributed under the MIT License. See [UPSTREAM_LICENSE](UPSTREAM_LICENSE) for the original licence. Obsidian Echo changes are independently maintained.
 
+## Last qualified cloud build
+
+The latest **independently verified** experiment is recorded in [the 418-test report](docs/CI-VERIFIED-2026-10-29-1307.md), from [GitHub Actions run 40878489558](https://github.com/EnigmaThe1/Obsidian-Echo/actions/runs/40878489558). It is an Android **debug APK**, with no production-credential storage and no physical-phone acceptance result yet. Later source or documentation commits are not implicitly covered by that test evidence.
+
 ## Experimental APK
 
 Only after the workflow completes successfully, open its GitHub Actions run and download the `obsidian-echo-experimental-apk` artifact ZIP. Verify its `SHA256SUMS.txt` file before installing the APK. This is **not** an audited production password manager, and it has no credential-vault access yet.
